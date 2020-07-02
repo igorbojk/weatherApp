@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { StyleSheet, ScrollView, SafeAreaView, RefreshControl } from 'react-native';
 import { Weather } from './components/Weather.component';
 
 const API_KEY = '';
 const WEATHER_API_URL = 'http://api.openweathermap.org/data/2.5/weather';
 
 export default function App() {
-  const [weatherKey, setWeatherKey] = useState("");
+  const [weatherKey, setWeatherKey] = useState("Clear");
   const [temperature, setTemperature] = useState(0);
   const [isLoading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchWeather();
+    fetchData();
   }, []);
 
-  const fetchWeather = (lat = 50, lon = 30) => {
+  const fetchData = () => {
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        fetchWeather(position.coords.latitude, position.coords.longitude);
+      },
+      error => {
+        console.log(error);
+        fetchWeather()
+      }
+    );
+  }
+
+  const fetchWeather = (lat = 20, lon = 20) => {
     fetch(
       `${WEATHER_API_URL}?lat=${lat}&lon=${lon}&APPID=${API_KEY}&units=metric`
     )
@@ -27,13 +40,16 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
-      {
-        isLoading ? 
-        <ActivityIndicator size="large" color="#0000ff" /> :
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+      contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={fetchData} />
+        }
+      >
         <Weather temperature={temperature} weatherKey={weatherKey}/>
-      }
-    </View>
+      </ScrollView>
+    </SafeAreaView >
   );
 }
 
