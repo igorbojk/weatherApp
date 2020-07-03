@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Text,  } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState, useRef } from 'react';
+import { View, StyleSheet, Text, Animated, Easing,  } from 'react-native';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 
 const weather: any = {
     Rain: {
@@ -65,6 +65,32 @@ const Weather: React.FC<{temperature: number, weatherKey: string}> = ({
     temperature,
     weatherKey
 }) => {
+
+  const [ isHelpVisible, setHelpVisibility ] = useState(false);
+
+  const showHelp = () => {
+    setHelpVisibility(true);
+    Pull();
+    setTimeout(() => {
+      setHelpVisibility(false);
+    }, 4000)
+  }
+
+  const pullAnim = useRef(new Animated.Value(0)).current;
+
+  const Pull = () => {
+    Animated.loop(
+      Animated.timing(pullAnim, {
+        toValue: 100,
+        duration: 1000,
+        useNativeDriver: true
+      }),
+      {
+        iterations: 4
+      }
+    ).start();
+  };
+
     return (
         <View style={
             [
@@ -72,11 +98,23 @@ const Weather: React.FC<{temperature: number, weatherKey: string}> = ({
               {backgroundColor: weather[weatherKey].background}
             ]
           }>
+            {isHelpVisible &&
+              <Animated.View style={[
+                styles.helpBlock,
+                {transform: [{translateY: pullAnim}]}
+              ]}>
+                <MaterialIcons size={32} name="touch-app" color={'#fff'}/>
+                <Text style={styles.helpText}>Pull to refresh</Text>
+              </Animated.View>
+            }
             <View style={styles.weatherContainer}>
-              <MaterialCommunityIcons size={90} name={weather[weatherKey].icon} color={'#fff'} />
-              <Text style={styles.temperature}>
-                {temperature}˚
-              </Text>
+              <MaterialIcons size={32} name="help" color={'#fff'} style={{opacity: 0.2}} onPress={() => showHelp()}/>
+              <View>
+                <MaterialCommunityIcons size={90} name={weather[weatherKey].icon} color={'#fff'} />
+                <Text style={styles.temperature}>
+                  {temperature}˚
+                </Text>
+              </View>
             </View>
             <Text style={styles.title}>
               {weather[weatherKey].title}
@@ -96,7 +134,9 @@ const styles = StyleSheet.create({
       padding: 8
     },
     weatherContainer: {
-      alignItems: 'flex-end',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      flexDirection: 'row',
       flex: 1,
       padding: 20,
       paddingTop: 40
@@ -109,6 +149,20 @@ const styles = StyleSheet.create({
     title: {
       fontSize: 60,
       color: '#fff'
+    },
+    helpBlock: {
+      position: 'absolute',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      top: 50,
+      left: 0,
+      right: 0,
+      marginTop: 0
+    },
+    helpText: {
+      fontSize: 14,
+      color: '#fff', 
+      marginTop: 6
     }
 });
 
